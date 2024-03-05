@@ -8,9 +8,10 @@ import java.util.List;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMax.SoftLimitDirection;
+import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.CANSparkBase.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -52,7 +53,7 @@ public class Arm extends SubsystemBase {
     leftArmPID.setIZone(0.0);
     leftArmPID.setFF(0.0);
     leftArmPID.setOutputRange(-0.75, 0.75); //0.7
-
+    
     rightArmMotor.restoreFactoryDefaults();
     rightArmMotor.setIdleMode(IdleMode.kCoast);
     rightArmMotor.setSmartCurrentLimit(30);
@@ -182,8 +183,4 @@ public class Arm extends SubsystemBase {
     rightArmMotor.setIdleMode(IdleMode.kBrake);
   }
 
-  public void setCoastMode() {
-    leftArmMotor.setIdleMode(IdleMode.kCoast);
-    rightArmMotor.setIdleMode(IdleMode.kCoast);
-  }
 }

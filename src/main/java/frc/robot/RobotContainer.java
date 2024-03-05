@@ -23,7 +23,12 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.ArmDown;
 import frc.robot.subsystems.ArmUp;
 import frc.robot.subsystems.DriveSubsystem;
-
+//import frc.robot.subsystems.ShootRing;
+//import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.Turret;
+import frc.robot.subsystems.TurretINTAKE;
+import frc.robot.subsystems.TurretShoot;
+import frc.robot.subsystems.TurretREV;
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -37,6 +42,9 @@ public class RobotContainer {
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
   private final Arm arm = new Arm();
+    //private final Shooter shooter = new Shooter();
+    private final Turret turret = new Turret();
+   
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
@@ -77,7 +85,10 @@ public class RobotContainer {
 
 driverJoystick.a().onTrue(new ArmDown(arm));         
 driverJoystick.x().onTrue(new ArmUp(arm));
-  }
+//driverJoystick.y().onTrue(new ShootRing(shooter, 10, 3));
+driverJoystick.rightBumper().onTrue(new TurretREV(turret));  
+driverJoystick.leftBumper().onTrue(new TurretINTAKE(turret));  
+}
  
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.

@@ -7,8 +7,7 @@ package frc.robot;
 import java.util.Collections;
 import java.util.List;
 
-import com.revrobotics.CANSparkMax.IdleMode;
-
+import com.revrobotics.CANSparkBase.IdleMode;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -112,7 +111,7 @@ public final class Constants {
 
     public static final double kTurningP = 1;
     public static final double kTurningI = 0;
-    public static final double kTurningD = 0;
+    public static final double kTurningD = 0; // Originally 0
     public static final double kTurningFF = 0;
     public static final double kTurningMinOutput = -1;
     public static final double kTurningMaxOutput = 1;
@@ -166,4 +165,13 @@ public static final int XBOXBUTTON_Y = 4;
     -90.0, //Origonal -10
     -1.0 //Original -27.0
   ));
-} 
+
+public static final int POWERSHOOTER = 0;
+public static final int FEEDERSHOOTER = 0;
+public static final double SHOOTER_FF = 0.00019;
+public static final double SHOOTER_P = 0.00025;
+public static final double RPM_STABILITY_ERROR = 25;
+public static final int SHOOTER_LEFT = 18; 
+public static final int SHOOTER_RIGHT = 0; 
+}
+

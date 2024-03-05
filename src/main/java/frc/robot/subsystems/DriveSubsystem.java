@@ -4,11 +4,6 @@
 
 package frc.robot.subsystems;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.pathplanner.lib.util.PIDConstants;
-import com.pathplanner.lib.util.ReplanningConfig;
-
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,6 +14,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
+import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
 import frc.robot.Constants.DriveConstants;
 import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -60,7 +56,7 @@ public class DriveSubsystem extends SubsystemBase {
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(m_gyro.getAngle()),
+      Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
       new SwerveModulePosition[] {
           m_frontLeft.getPosition(),
           m_frontRight.getPosition(),
@@ -76,62 +72,15 @@ public class DriveSubsystem extends SubsystemBase {
   public void periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
             m_rearLeft.getPosition(),
             m_rearRight.getPosition()
         });
-       } 
-       public ChassisSpeeds getChassisSpeeds() {
-          // Assuming that the getPose() and resetOdometry() methods are correctly implemented.
-          Pose2d pose = getPose();
-          SwerveModuleState[] moduleStates = new SwerveModuleState[] {
-              m_frontLeft.getState(),
-              m_frontRight.getState(),
-              m_rearLeft.getState(),
-              m_rearRight.getState()
-          };
-      
-          // Convert module states to chassis speeds
-          ChassisSpeeds chassisSpeeds = DriveConstants.kDriveKinematics.toChassisSpeeds(moduleStates);
-      
-          // Convert the chassis speeds to field-relative speeds
-          chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
-              chassisSpeeds.vxMetersPerSecond,
-              chassisSpeeds.vyMetersPerSecond,
-              chassisSpeeds.omegaRadiansPerSecond,
-              pose.getRotation()
-          );
-      
-          return chassisSpeeds;
-        }
-  
- public void driveRobotRelative(ChassisSpeeds speeds) {
-    SwerveModuleState[] moduleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(speeds);
-
-    // Normalize wheel speeds to ensure they do not exceed the maximum allowed speed
-    double maxSpeed = Math.max(
-        Math.max(Math.abs(moduleStates[0].speedMetersPerSecond), Math.abs(moduleStates[1].speedMetersPerSecond)),
-        Math.max(Math.abs(moduleStates[2].speedMetersPerSecond), Math.abs(moduleStates[3].speedMetersPerSecond))
-    );
-
-    if (maxSpeed > DriveConstants.kMaxSpeedMetersPerSecond) {
-      double scale = DriveConstants.kMaxSpeedMetersPerSecond / maxSpeed;
-
-      for (SwerveModuleState state : moduleStates) {
-        state.speedMetersPerSecond *= scale;
-      }
-    }
-  
-
-    // Update the swerve modules with the calculated states
-    m_frontLeft.setDesiredState(moduleStates[0]);
-    m_frontRight.setDesiredState(moduleStates[1]);
-    m_rearLeft.setDesiredState(moduleStates[2]);
-    m_rearRight.setDesiredState(moduleStates[3]);
   }
+
   /**
    * Returns the currently-estimated pose of the robot.
    *
@@ -148,7 +97,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(
-        Rotation2d.fromDegrees(m_gyro.getAngle()),
+        Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)),
         new SwerveModulePosition[] {
             m_frontLeft.getPosition(),
             m_frontRight.getPosition(),
@@ -228,7 +177,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(m_gyro.getAngle()))
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered));
     SwerveDriveKinematics.desaturateWheelSpeeds(
         swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
@@ -269,22 +218,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.resetEncoders();
     m_rearRight.resetEncoders();
   }
-   { // Configure the AutoBuilder last
-    AutoBuilder.configureHolonomic(
-        this::getPose, // Robot pose supplier
-        this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
-        this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-        this::driveRobotRelative, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-        new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
-            new PIDConstants(2.0, 0.0, 0.0), // Translation PID constants
-            new PIDConstants(2.0, 0.0, 0.0), // Rotation PID constants
-            4.5, // Max module speed, in m/s
-            0.4, // Drive base radius in meters. Distance from robot center to furthest module.
-            new ReplanningConfig() // Default path replanning config. See the API for the options here
-        ),
-        this // Reference to this subsystem to set requirements
-    );
-}
+
   /** Zeroes the heading of the robot. */
   public void zeroHeading() {
     m_gyro.reset();
@@ -296,7 +230,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @return the robot's heading in degrees, from -180 to 180
    */
   public double getHeading() {
-    return Rotation2d.fromDegrees(m_gyro.getAngle()).getDegrees();
+    return Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kZ)).getDegrees();
   }
 
   /**
@@ -305,6 +239,6 @@ public class DriveSubsystem extends SubsystemBase {
    * @return The turn rate of the robot, in degrees per second
    */
   public double getTurnRate() {
-    return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
+    return m_gyro.getRate(IMUAxis.kZ) * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
 }

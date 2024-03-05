@@ -4,45 +4,42 @@
 
 package frc.robot.subsystems;
 import java.util.function.DoubleSupplier;
+import frc.robot.subsystems.Turret;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
-import frc.robot.GlobalVariables;
+public class TurretShoot extends CommandBase {
 
-public class ArmUp extends Command {
-  
-  
-  private final Arm TheArm;
-  private int armUp;
-  /** Creates a new RotateArmToAngle. */
-  public ArmUp(Arm TheArm) {
-    this.TheArm = TheArm;
+  private final Turret shooter;
+  private final DoubleSupplier speed;
+  /** Creates a new ShootWithTrigger. */
+  public TurretShoot(Turret shooter, DoubleSupplier speed) {
+    this.shooter = shooter;
+    this.speed = speed;
+
+    addRequirements(shooter);
     // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(TheArm);
   }
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {
-    armUp = GlobalVariables.upPosition;
-    TheArm.setArmAnglePID(Constants.ARM_POSITIONS.get(armUp));
-  }
+  public void initialize() {}
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {}
+  public void execute() {
+    shooter.setFlywheelPercent(speed.getAsDouble());
+
+  }
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    shooter.setFlywheelPercent(0);
+  }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if(TheArm.isArmInPosition(Constants.ARM_POSITIONS.get(armUp))) {
-      return true;
-    }else{
-      return false;
-    }
+    return false;
   }
-} 
+}
